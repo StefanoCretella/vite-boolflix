@@ -1,31 +1,48 @@
 <template>
   <div>
-    <input v-model="query" @input="fetchMovies" placeholder="Cerca un film..." />
-    <div v-if="movies.length">
-      <div v-for="movie in movies" :key="movie.id">
+    <input type="text" v-model="searchQuery" placeholder="Cerca un film...">
+    <button @click="searchMovies">Cerca</button>
+
+    <ul v-if="movies.length > 0">
+      <li v-for="movie in movies" :key="movie.id">
         <h3>{{ movie.title }}</h3>
-        <p>{{ movie.overview }}</p>
-      </div>
-    </div>
+        <p>Titolo Originale: {{ movie.original_title }}</p>
+        <p>Lingua: {{ movie.original_language }}</p>
+        <p>Voto: {{ movie.vote_average }}</p>
+      </li>
+    </ul>
+    <p v-else-if="loading">Caricamento...</p>
+    <p v-else-if="error">{{ error }}</p>
+    <p v-else>Nessun risultato trovato.</p>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
-import { searchMovies } from './api';
-
 export default {
-  setup() {
-    const query = ref('');
-    const movies = ref([]);
-
-    const fetchMovies = async () => {
-      if (query.value) {
-        movies.value = await searchMovies(query.value);
-      }
+  data() {
+    return {
+      searchQuery: ''
     };
-
-    return { query, movies, fetchMovies };
+  },
+  computed: {
+    movies() {
+      return this.$store.state.movies;
+    },
+    loading() {
+      return this.$store.state.loading;
+    },
+    error() {
+      return this.$store.state.error;
+    }
+  },
+  methods: {
+    async searchMovies() {
+      try {
+        await this.$store.dispatch('searchMovies', this.searchQuery);
+      } catch (error) {
+        console.error('Errore durante la ricerca dei film:', error);
+      }
+    }
   }
 };
 </script>
