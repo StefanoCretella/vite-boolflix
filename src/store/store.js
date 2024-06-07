@@ -1,25 +1,58 @@
-import axios from 'axios';
 import { createStore } from 'vuex';
+import axios from 'axios';
 
-const apiKey = import.meta.env.VITE_API_KEY;
+const API_KEY = 'e99307154c6dfb0b4750f6603256716d';
+const BASE_URL = 'https://api.themoviedb.org/3';
 
 export default createStore({
   state: {
-    movies: []
+    movies: [],
+    loading: false,
+    error: null
   },
   mutations: {
-    SET_MOVIES(state, movies) {
+    setMovies(state, movies) {
       state.movies = movies;
+    },
+    setLoading(state, loading) {
+      state.loading = loading;
+    },
+    setError(state, error) {
+      state.error = error;
     }
   },
   actions: {
-    async searchMovies({ commit }, query) {
+    async searchMoviesAndTVShows({ commit }, query) {
+      commit('setLoading', true);
+      commit('setError', null);
+
       try {
-        const response = await axios.get(`https://api.themoviedb.org/3/search/movie?query=${query}&api_key=${apiKey}&language=it-IT`);
-        commit('SET_MOVIES', response.data.results);
+        const [movieResponse, tvResponse] = await Promise.all([
+          axios.get(`${BASE_URL}/search/movie`, {
+            params: {
+              api_key: API_KEY,
+              query,
+              language: 'it-IT'
+            }
+          }),
+          axios.get(`${BASE_URL}/search/tv`, {
+            params: {
+              api_key: API_KEY,
+              query,
+              language: 'it-IT'
+            }
+          })
+        ]);
+
+        const movies = movieResponse.data.results;
+        const tvShows = tvResponse.data.results;
+
+        const combinedResults = [...movies, ...tvShows];
+        commit('setMovies', combinedResults);
       } catch (error) {
-        console.error('Errore durante la ricerca dei film:', error);
-        throw error; 
+        commit('setError', 'Errore durante la ricerca. Riprova.');
+      } finally {
+        commit('setLoading', false);
       }
     }
   }
