@@ -6,9 +6,10 @@
     <ul v-if="movies.length > 0">
       <li v-for="item in movies" :key="item.id">
         <h3>{{ item.title || item.name }}</h3>
+        <img :src="getCoverImage(item.poster_path)" alt="Cover image" class="cover-image">
         <p>Titolo Originale: {{ item.original_title || item.original_name }}</p>
         <p>
-          Lingua: <i :class="getLanguageFlag(item.original_language)" class="flag"></i> 
+          Lingua: <img :src="getLanguageFlag(item.original_language)" alt="Language flag" class="flag"> 
           {{ item.original_language }}
         </p>
         <p>Voto: {{ item.vote_average }}</p>
@@ -32,7 +33,6 @@ export default {
   },
   computed: {
     movies() {
-      
       return this.$store.state.movies;
     },
     loading() {
@@ -50,6 +50,10 @@ export default {
         console.error('Errore durante la ricerca dei film e delle serie TV:', error);
       }
     },
+    getCoverImage(posterPath) {
+      if (!posterPath) return ''; // Gestisci il caso in cui non ci sia un posterPath
+      return `https://image.tmdb.org/t/p/w500/${posterPath}`;
+    },
     getLanguageFlag(languageCode) {
       return languageFlags[languageCode] || '';
     }
@@ -62,5 +66,9 @@ export default {
   width: 20px;
   height: auto;
   margin-right: 5px;
+}
+.cover-image {
+  width: 200px; /* Imposta la larghezza desiderata per le immagini della copertina */
+  height: auto;
 }
 </style>
